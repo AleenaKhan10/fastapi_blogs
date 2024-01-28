@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from typing import Optional
 
 
 app = FastAPI()
@@ -10,8 +11,11 @@ def index():
 
 
 @app.get('/blogs')
-def get_blogs():
-    return 'here is the list of blogs'
+def get_blogs(limit=10, published: bool = True, sort: Optional[str] = None):
+    if published:
+        return f'here is the list of {limit} first published blogs'
+    else:
+        return f'here is the list of {limit} first blogs'
 
 
 @app.get('/blog/unpublished')
