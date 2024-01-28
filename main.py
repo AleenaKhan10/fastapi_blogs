@@ -15,7 +15,7 @@ def get_blogs():
 
 
 @app.get('/blog/{id}')
-def get_blog_id(id):
+def get_blog_id(id: int):
     return f'This is the blog with id {id}'
 
 
