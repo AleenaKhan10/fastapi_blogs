@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import FastAPI, Depends, HTTPException, status
 from . import schemas, models
 from database.database import engine, SessionLocal
@@ -17,7 +18,7 @@ def get_db():
 
 
 
-@app.post('/blog/create')
+@app.post('/blog/create', response_model= schemas.ShowBlog)
 def create_blog(request: schemas.Blog, db: Session = Depends(get_db)):
     blog = models.Blog(title = request.title, description = request.description)
     db.add(blog)
@@ -26,7 +27,7 @@ def create_blog(request: schemas.Blog, db: Session = Depends(get_db)):
     return blog
 
 
-@app.get('/blog/all')
+@app.get('/blog/all', response_model=List[schemas.ShowBlog])
 def get_all_blogs(db: Session = Depends(get_db)):
     blogs = db.query(models.Blog).all()
     return blogs
@@ -64,7 +65,7 @@ def delete_blog(id, request : schemas.Blog, db: Session = Depends(get_db)):
         return blog
     
 
-@app.post('/user/create', status_code=status.HTTP_201_CREATED)    
+@app.post('/user/create', status_code=status.HTTP_201_CREATED, response_model=schemas.ShowUser)    
 def create_user(request : schemas.User, db: Session = Depends(get_db)):
     user = models.User(name = request.name, email = request.email, password = request.password)
     db.add(user)
