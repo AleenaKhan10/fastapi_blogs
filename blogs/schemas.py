@@ -8,4 +8,6 @@ class Blog(BaseModel):
     description: str
     
 
-class User(BaseModel)
+class User(BaseModel):
+    email : str
+    password : str
