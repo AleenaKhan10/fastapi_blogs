@@ -1,8 +1,9 @@
 from typing import List
 from fastapi import FastAPI, Depends, HTTPException, status
-from . import schemas, models
+from . import schemas, models, hashing
 from database.database import engine, SessionLocal
 from sqlalchemy.orm import Session
+
 
 
 models.Base.metadata.create_all(engine)
@@ -67,20 +68,21 @@ def delete_blog(id, request : schemas.Blog, db: Session = Depends(get_db)):
 
 @app.post('/user/create', status_code=status.HTTP_201_CREATED, response_model=schemas.ShowUser)    
 def create_user(request : schemas.User, db: Session = Depends(get_db)):
-    user = models.User(name = request.name, email = request.email, password = request.password)
+    hashed_password = hashing.Hash.bcrypt(request.password)
+    user = models.User(name = request.name, email = request.email, password = hashed_password)
     db.add(user)
     db.commit()
     db.refresh(user)   
     return user 
 
 
-@app.get('/user/all', status_code=status.HTTP_200_OK)
+@app.get('/user/all', status_code=status.HTTP_200_OK, response_model=List[schemas.ShowUser])
 def get_all_users(db: Session = Depends(get_db)):
     users = db.query(models.user).all()
     return users
 
 
-@app.get('/user/{id}')
+@app.get('/user/{id}', response_model=schemas.ShowUser)
 def get_user_from_id(id, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == id).first()
     if not user:
@@ -99,7 +101,7 @@ def delete_user(id, db: Session = Depends(get_db)):
     return user
 
 
-@app.delete('user/put/{id}')
+@app.delete('user/put/{id}', response_model=schemas.ShowUser)
 def delete_user(id, request: schemas.User, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == id).first()
     if not user:
