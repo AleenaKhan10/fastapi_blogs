@@ -7,13 +7,8 @@ class Blog(BaseModel):
     title: str
     description: str
 
-class ShowBlog(Blog):
     class Config():
         orm_mode = True 
-
-class Blog(BaseModel):
-    title: str
-    description: str
     
 
 class User(BaseModel):
@@ -27,3 +22,11 @@ class ShowUser(BaseModel):
     email : str
     class Config():
         orm_model = True
+        
+        
+
+class ShowBlog(Blog):
+    creator: ShowUser
+    id : int
+    class Config():
+        orm_mode = True 

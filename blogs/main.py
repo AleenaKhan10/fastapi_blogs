@@ -3,6 +3,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from . import schemas, models, hashing
 from database.database import engine, SessionLocal
 from sqlalchemy.orm import Session
+from sqlalchemy import delete
 
 
 
@@ -21,7 +22,7 @@ def get_db():
 
 @app.post('/blog/create', response_model= schemas.ShowBlog)
 def create_blog(request: schemas.Blog, db: Session = Depends(get_db)):
-    blog = models.Blog(title = request.title, description = request.description)
+    blog = models.Blog(title = request.title, description = request.description, user_id = 3)
     db.add(blog)
     db.commit()
     db.refresh(blog)
@@ -44,25 +45,25 @@ def get_blog_from_id(id, db: Session = Depends(get_db)):
 
 @app.put('/blog/update/{id}', status_code= status.HTTP_200_OK)
 def update_blog(id, request : schemas.Blog, db: Session = Depends(get_db)):
-    blog = db.query(models.Blog).filter(models.Blog.id == id)
+    blog = db.query(models.Blog).filter(models.Blog.id == id).first()
     if not blog:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"blog with id {id} is not found")
     else:
-        blog.update(request)
+        blog.title = request.title
+        blog.description = request.description
         db.commit()
         db.refresh(blog)
         return blog
     
     
-@app.delete('/blog/delete/{id}', status_code= status.HTTP_200_OK)
-def delete_blog(id, request : schemas.Blog, db: Session = Depends(get_db)):
-    blog = db.query(models.Blog).filter(models.Blog.id == id)
+@app.delete('/blog/delete/{id}', status_code= status.HTTP_204_NO_CONTENT)
+def delete_blog(id, db: Session = Depends(get_db)):
+    blog = db.query(models.Blog).filter(models.Blog.id == id).first()
     if not blog:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"blog with id {id} is not found")
     else:
-        blog.delete(synchronize_session=False)
+        db.delete(blog)
         db.commit()
-        db.refresh(blog)
         return blog
     
 
@@ -78,7 +79,7 @@ def create_user(request : schemas.User, db: Session = Depends(get_db)):
 
 @app.get('/user/all', status_code=status.HTTP_200_OK, response_model=List[schemas.ShowUser])
 def get_all_users(db: Session = Depends(get_db)):
-    users = db.query(models.user).all()
+    users = db.query(models.User).all()
     return users
 
 
@@ -90,23 +91,25 @@ def get_user_from_id(id, db: Session = Depends(get_db)):
     return user
 
 
-@app.delete('user/delete/{id}')
+@app.delete('/user/delete/{id}')
 def delete_user(id, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'user with id {id} is not found')
-    user.delete(synchronize_session=False)
-    db.commit()
-    db.refresh(user)
+    db.delete(user)
+    db.commit()  
     return user
 
 
-@app.delete('user/put/{id}', response_model=schemas.ShowUser)
-def delete_user(id, request: schemas.User, db: Session = Depends(get_db)):
+@app.put('/user/update/{id}', status_code= status.HTTP_200_OK)
+def update_blog(id, request : schemas.User, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == id).first()
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'user with id {id} is not found')
-    user.update(request)
-    db.commit()
-    db.refresh(user)
-    return user
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"user with id {id} is not found")
+    else:
+        user.name = request.name
+        user.email = request.email
+        user.password = request.password
+        db.commit()
+        db.refresh(user)
+        return user
