@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from database.database import get_db
-from .. import schemas, models, hashing
+from .. import schemas, models, hashing, token
 
 
 
@@ -18,5 +18,7 @@ def user_login(request: schemas.Login, db: Session = Depends(get_db)):
     
     if not hashing.Hash.verify(request.password, user.password):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Password is incorrect")
-        
-    return user
+    
+    access_token = token.create_access_token(data={"sub": user.email})
+    return schemas.Token(access_token=access_token, token_type="bearer")
+

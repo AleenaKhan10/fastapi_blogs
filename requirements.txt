@@ -2,3 +2,4 @@ fastapi
 SQLAlchemy
 uvicorn
 passlib
+python-jose
