@@ -30,3 +30,9 @@ class ShowBlog(Blog):
     id : int
     class Config():
         orm_mode = True 
+        
+        
+
+class Login(BaseModel):
+    username : str
+    password : str
