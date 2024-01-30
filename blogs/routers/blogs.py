@@ -1,7 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, status, HTTPException
-from .. import schemas, models
+from .. import schemas, models, oauth2, token
 from database.database import get_db
 from sqlalchemy.orm import Session
 
@@ -15,8 +15,8 @@ router = APIRouter(
 
 
 @router.post('/create', response_model= schemas.ShowBlog)
-def create_blog(request: schemas.Blog, db: Session = Depends(get_db)):
-    blog = models.Blog(title = request.title, description = request.description, user_id = 3)
+def create_blog(request: schemas.Blog, db: Session = Depends(get_db), get_current_user: schemas.User =  Depends(oauth2.get_current_user)):
+    blog = models.Blog(title = request.title, description = request.description, user_id = 2)
     db.add(blog)
     db.commit()
     db.refresh(blog)
